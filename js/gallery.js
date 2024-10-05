@@ -64,8 +64,39 @@ const images = [
   },
 ];
 
+const gallery = document.querySelector('.gallery');
+
 function createHtmlMarkup() {
-    images.forEach( => {
-        
-    }
+    images.forEach(item => {
+      const galleryItem = document.createElement('li');
+      galleryItem.className = 'gallery-item';
+
+      const galleryLink = document.createElement('a');
+      galleryLink.className = 'gallery-link';
+      galleryLink.href = item.original;
+
+      const galleryImg = document.createElement('img');
+      galleryImg.className = 'gallery-image';
+      galleryImg.src = item.preview;
+      galleryImg.alt = item.description;
+      galleryImg.setAttribute('data-source', item.original);
+      
+      gallery.append(galleryItem);
+      galleryItem.append(galleryLink);
+      galleryLink.append(galleryImg);
+    });
 }
+createHtmlMarkup();
+
+function getLink() {
+  gallery.addEventListener('click', event => {
+    if (event.target.className == 'gallery-image') {
+      event.preventDefault();
+      let link = event.target.getAttribute('data-source');
+      basicLightbox.create(`
+        <img width="1400" height="900" src="${link}">
+      `).show()
+    } 
+  })
+}
+getLink();

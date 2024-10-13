@@ -65,38 +65,84 @@ const images = [
 ];
 
 const gallery = document.querySelector('.gallery');
+const wrapper = document.querySelector('.wrapper');
 
-function createHtmlMarkup() {
-    images.forEach(item => {
-      const galleryItem = document.createElement('li');
-      galleryItem.className = 'gallery-item';
+function generateGallery() {
+  images.forEach((image, index) => {
+    const galleryItem = document.createElement('li');
+    galleryItem.classList.add('gallery-item');
 
-      const galleryLink = document.createElement('a');
-      galleryLink.className = 'gallery-link';
-      galleryLink.href = item.original;
+    const galleryLink = document.createElement('a');
+    galleryLink.classList.add('gallery-link');
+    galleryLink.href = image.original;
 
-      const galleryImg = document.createElement('img');
-      galleryImg.className = 'gallery-image';
-      galleryImg.src = item.preview;
-      galleryImg.alt = item.description;
-      galleryImg.setAttribute('data-source', item.original);
-      
-      gallery.append(galleryItem);
-      galleryItem.append(galleryLink);
-      galleryLink.append(galleryImg);
-    });
+    const galleryImg = document.createElement('img');
+    galleryImg.classList.add('gallery-image');
+    galleryImg.src = image.preview;
+    galleryImg.alt = image.description;
+    galleryImg.setAttribute('data-source', image.original);
+    galleryImg.setAttribute('data-index', index);
+
+    galleryItem.append(galleryLink);
+    galleryLink.append(galleryImg);
+    gallery.append(galleryItem);
+  });
 }
-createHtmlMarkup();
 
-function getLink() {
+function setupImageClickHandler() {
   gallery.addEventListener('click', event => {
-    if (event.target.className == 'gallery-image') {
+    if (event.target.classList.contains('gallery-image')) {
       event.preventDefault();
-      let link = event.target.getAttribute('data-source');
-      basicLightbox.create(`
-        <img width="1400" height="900" src="${link}">
-      `).show()
-    } 
-  })
+      const link = event.target.getAttribute('data-source');
+      const index = parseInt(event.target.getAttribute('data-index'), 10);
+      openLightbox(link, index);
+    }
+  });
 }
-getLink();
+
+function openLightbox(link, index) {
+  const instance = basicLightbox.create(`
+    <img width="1400" height="900" src="${link}">
+  `, { closable: false });
+
+  instance.show();
+  setupSliderControls(index, instance);
+}
+
+function setupSliderControls(index, instance) {
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'prev btn';
+  prevBtn.textContent = '<';
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next btn';
+  nextBtn.textContent = '>';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'closeBtn';
+  closeBtn.textContent = 'X';
+
+  gallery.append(prevBtn);
+  gallery.append(nextBtn);
+  wrapper.append(closeBtn);
+  
+  prevBtn.addEventListener('click', () => changeImage(index = index > 0 ? index - 1 : 0, instance));
+  nextBtn.addEventListener('click', () => changeImage(index = index < images.length ? index + 1 : images.length - 1, instance));
+  closeBtn.addEventListener('click', () => closeOpenLightbox([prevBtn, nextBtn, closeBtn], instance))
+}
+
+function changeImage(newIndex, instance) { 
+  if (newIndex >= 0 && newIndex < images.length) {
+    const newImage = document.querySelector(`[data-index="${newIndex}"]`);
+    const newLink = newImage.getAttribute('data-source');
+    instance.element().querySelector('img').src = newLink;
+  }
+}
+
+function closeOpenLightbox(args, instance) {
+  args?.forEach(item => item.remove());
+  instance.close();
+}
+
+generateGallery();
+setupImageClickHandler();
